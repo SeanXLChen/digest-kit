@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Copy to ~/Library/LaunchAgents/local.digest-kit.plist, replace /PATH/TO, then:
+     launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/local.digest-kit.plist
+     Hourly on purpose: a sleeping Mac catches up on wake; digest.sh decides whether today is a run day. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>local.digest-kit</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/zsh</string>
+    <string>/PATH/TO/digest-kit/digest.sh</string>
+  </array>
+  <key>StartInterval</key><integer>3600</integer>
+  <key>RunAtLoad</key><true/>
+  <key>StandardErrorPath</key><string>/tmp/digest-kit.err</string>
+</dict>
+</plist>

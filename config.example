@@ -1,0 +1,14 @@
+# Copy to `config` (git-ignored) and edit. Sourced by digest.sh as zsh.
+NAME=ai-digest                       # names the state dir: ~/.local/state/digest-kit/$NAME
+# SOURCES and PROMPT default to sources.tsv and prompt.md next to digest.sh.
+OUTDIR="$HOME/notes/digests"         # one YYYY-MM-DD.md per run; also how the schedule knows the last run
+EVERY=1                              # run once every N days
+AFTER=0800                           # not before this time (HHMM)
+MODEL=claude-opus-5
+
+# Your own notes, given to the model so it ranks items against what you care about and already know.
+# Each file becomes a "### <filename>" section in the input. Keep them short; they are read on every run.
+NOTES=(
+  "$HOME/notes/interests.md"
+  "$HOME/notes/already-tracked.md"
+)

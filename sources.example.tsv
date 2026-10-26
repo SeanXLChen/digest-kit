@@ -1,0 +1,6 @@
+# kind	name	url  (tab-separated; kind = rss | youtube | trending | hn)
+# youtube: put the channel id (UC...) in the url column. hn: Algolia search API, stories over 150 points.
+trending	GitHub Trending (weekly)	https://github.com/trending?since=weekly
+hn	Hacker News (>150 points)	https://hn.algolia.com/api/v1/search
+rss	Simon Willison	https://simonwillison.net/atom/everything/
+rss	Latent Space	https://www.latent.space/feed
