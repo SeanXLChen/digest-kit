@@ -20,6 +20,9 @@ EVERY=1
 AFTER=0800
 MODEL=claude-opus-5
 source "$CONFIG"
+for f in "$SOURCES" "$PROMPT" "${NOTES[@]}"; do
+  [[ -f "$f" ]] || { print -u2 "digest-kit: missing $f (copy the .example file?)"; exit 1; }
+done
 
 STATE="$HOME/.local/state/digest-kit/$NAME"
 LOG="$STATE/run.log"
