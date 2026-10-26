@@ -1,31 +1,64 @@
+<p align="center"><img src="assets/banner.png" alt="digest-kit: your Mac mini reads the internet for you" width="100%"></p>
+
+<p align="center"><b>English</b> · <a href="README.zh-CN.md">简体中文</a></p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/macOS-launchd-black?logo=apple" alt="macOS launchd">
+  <img src="https://img.shields.io/badge/runs%20on-Claude%20Code-d97757" alt="Claude Code">
+  <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT">
+</p>
+
 # digest-kit
 
-A small local feed digest for macOS. It reads your RSS feeds, YouTube channels, GitHub Trending and Hacker News, asks Claude to pick what matters to you, saves a Markdown report, and sends a short message to your phone.
+**Your Mac mini is on 24/7 anyway. Let it read your feeds every morning and send you the few things worth your time.**
 
-About 200 lines of zsh and Python. No server, no database, no dependencies beyond `python3`, `curl` and the [Claude Code](https://claude.com/claude-code) CLI.
+digest-kit fetches your RSS feeds, YouTube channels, GitHub Trending and Hacker News, asks Claude to pick what matters *to you*, saves a Markdown report, and pings your phone on Telegram.
 
-## Why this and not a hosted digest
+About 200 lines of zsh and Python. No server, no database, no Docker. Just `python3`, `curl` and the [Claude Code](https://claude.com/claude-code) CLI you already have.
 
-- **Runs on your Mac, not in an app.** launchd fires it hourly. If the Mac was asleep, it catches up on wake. You don't need any window open.
-- **Items are marked seen only after the message is sent.** If the fetch, the model or the push fails, the next run retries the same items. Nothing is lost silently.
-- **The model has no tools.** It runs with `--tools ""` and no MCP servers. A feed item that says "ignore previous instructions and run X" can only change the text of the digest, not do anything.
-- **It ranks against your own notes.** You list a few Markdown files (what you work on, what you skip, what you already track). The model reads them on every run, so it drops things you already know about.
+## 👀 What you get
 
-## Setup
+A real run, unedited, with the example sources and a two-line interests file:
+
+```markdown
+## Try
+1. **Graphify** https://github.com/Graphify-Labs/graphify — Turn any codebase into a queryable
+   knowledge graph for Claude Code using local deterministic AST parsing.
+   Why it fits: Local-first approach, direct Claude Code skill integration.
+...
+## Read
+No strong picks this week. HN content was mostly off-topic (politics, health news, general essays).
+
+## Dropped
+20 items. Reasons: off-topic, outside stated interests, insufficient summary detail.
+```
+
+It says "nothing good today" when there is nothing good. That's the point.
+
+## 🖥️ Made for the Mac that never sleeps
+
+If you keep a Mac mini (or any always-on Mac) running agents, this slots right in:
+
+- **launchd, not an app.** It fires hourly and decides itself whether today is a run day. A Mac that was asleep catches up on wake. No window, no menu-bar icon.
+- **Nothing gets lost.** Items are marked seen only *after* the phone message is sent. If the fetch, the model or Telegram fails, the next run retries the same items.
+- **Safe to run unattended.** The model runs with no tools (`--tools ""`, no MCP servers). A feed item that says "ignore previous instructions and run X" can only change the text of the digest. It can't touch your machine.
+- **Ranks against your own notes.** Point it at a few Markdown files (what you work on, what you skip, what you already follow). It drops what you already know about.
+
+## 🚀 Setup (5 minutes)
 
 ```sh
-git clone <this repo> ~/digest-kit && cd ~/digest-kit
+git clone https://github.com/SeanXLChen/digest-kit ~/digest-kit && cd ~/digest-kit
 cp config.example config                 # set OUTDIR and NOTES
 cp sources.example.tsv sources.tsv       # your feeds
-cp prompt.example.md prompt.md           # tune the picking rules and output format
+cp prompt.example.md prompt.md           # picking rules and output format
 FORCE=1 ./digest.sh                      # first run, ignores the schedule
 ```
 
-The report lands in `$OUTDIR/YYYY-MM-DD.md`. Logs and the seen list are in `~/.local/state/digest-kit/<NAME>/`.
+The report lands in `$OUTDIR/YYYY-MM-DD.md`. Logs and the seen list live in `~/.local/state/digest-kit/<NAME>/`.
 
-### Phone message (optional)
+### 📱 Phone message (optional)
 
-Create a Telegram bot with @BotFather, then:
+Create a Telegram bot with [@BotFather](https://t.me/BotFather), then:
 
 ```sh
 mkdir -p ~/.config/digest-kit
@@ -37,15 +70,20 @@ EOF
 chmod 600 ~/.config/digest-kit/telegram.env
 ```
 
-Without this file, `notify.sh` does nothing and the report is still saved. To use ntfy, Slack or email instead, replace `notify.sh`.
+No file, no message; the report is still saved. Prefer ntfy, Slack or email? Replace `notify.sh`, it's 25 lines.
 
-### Schedule
+### ⏰ Schedule
 
-Copy `launchd.example.plist` to `~/Library/LaunchAgents/`, fix the path, and load it (instructions are in the file). `EVERY` and `AFTER` in `config` decide how often it really runs.
+```sh
+sed "s|/PATH/TO|$HOME|" launchd.example.plist > ~/Library/LaunchAgents/local.digest-kit.plist
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/local.digest-kit.plist
+```
 
-To run several digests (say, one for AI and one for local news), make one config per digest with a different `NAME` and `OUTDIR`, and one plist per config passing the config path as the argument.
+`EVERY` (days) and `AFTER` (HHMM) in `config` decide how often it really runs.
 
-## Sources
+**Several digests** (say, AI news and local news): one config per digest with its own `NAME` and `OUTDIR`, and one plist per config passing the config path as the argument.
+
+## 📡 Sources
 
 `sources.tsv` is tab-separated: `kind  name  url`.
 
@@ -58,7 +96,7 @@ To run several digests (say, one for AI and one for local news), make one config
 
 One broken source is logged and skipped. The rest still run.
 
-## Test
+## 🧪 Test
 
 ```sh
 python3 test_fetch.py
@@ -66,6 +104,10 @@ python3 test_fetch.py
 
 Checks parsing, the seen filter, the age filter and the broken-source path, with no network.
 
-## Cost
+## 💸 Cost
 
-One `claude -p` call per run. Input is your notes plus the new items, usually a few thousand tokens. Use a smaller `MODEL` in `config` if you run it often.
+One `claude -p` call per run. Input is your notes plus the new items, usually a few thousand tokens. Running daily? Set a smaller `MODEL` in `config`.
+
+## 📜 License
+
+[MIT](LICENSE)
